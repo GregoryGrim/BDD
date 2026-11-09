@@ -1,404 +1,232 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111111">
-  <title>Гра починається</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Гра починається ;)</title>
+<style>
+  :root {
+    --bg: #111111;
+    --card: #1C1C1C;
+    --accent: #ED4775;
+    --text: #FFFFFF;
+    --muted: #B8B8B8;
+    --btn: #292929;
+    --line: #3a3a3a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+  .terminal { width: 100%; max-width: 450px; text-align: center; }
 
-  <style>
-    /* =========================================
-       ОСНОВНЕ ОФОРМЛЕННЯ САЙТУ
-       Тут можна змінювати кольори та розміри
-       ========================================= */
+  .symbols { display: flex; justify-content: center; gap: 22px; margin: 8px 0 22px; }
+  .symbols svg { width: 38px; height: 38px; fill: none; stroke: var(--accent); stroke-width: 4; }
 
-    :root {
-      --background: #111111;
-      --panel: #1c1c1c;
-      --pink: #ed4775;
-      --pink-hover: #ff5b88;
-      --text: #ffffff;
-      --muted: #b8b8b8;
-      --button: #292929;
-      --button-hover: #3a3a3a;
-    }
+  h1 { font-size: clamp(26px, 8vw, 34px); letter-spacing: .06em; margin: 0 0 16px; font-weight: 800; }
+  .welcome p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0 0 12px; }
+  .welcome p:first-child { color: var(--text); font-weight: 600; }
 
-    * {
-      box-sizing: border-box;
-    }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 22px 0; }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      padding: 28px 16px 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(237, 71, 117, 0.13), transparent 38%),
-        var(--background);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-    }
+  h2 { font-size: 15px; letter-spacing: .12em; color: var(--accent); margin: 0 0 14px; font-weight: 700; }
 
-    .container {
-      width: 100%;
-      max-width: 430px;
-      text-align: center;
-    }
+  .code-wrap { position: relative; margin: 0 auto 10px; max-width: 320px; }
+  .cells { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .cell {
+    height: 72px; display: flex; align-items: center; justify-content: center;
+    font-size: 34px; font-weight: 700; border-left: 1px solid var(--line);
+    transition: box-shadow .15s;
+  }
+  .cell:first-child { border-left: 0; }
+  .cell.active { box-shadow: inset 0 0 0 2px var(--accent); background: rgba(237, 71, 117, .08); }
+  /* Справжнє поле введення лежить поверх комірок і прозоре */
+  #code {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    opacity: 0.02; /* майже невидиме, але справжнє й фокусується */
+    border: 0; background: transparent; color: transparent; caret-color: transparent;
+    font-size: 16px; /* щоб iOS не наближав сторінку */
+    cursor: text;
+  }
+  .hint-text { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
 
-    .symbols {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 22px;
-      margin-bottom: 30px;
-    }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 320px; margin: 0 auto 14px; }
+  button {
+    font: inherit; color: var(--text); background: var(--btn); border: 1px solid var(--line);
+    border-radius: 10px; height: 56px; font-size: 22px; font-weight: 600; cursor: pointer;
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  }
+  button:active { background: #3a3a3a; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .keypad .small { font-size: 17px; color: var(--muted); }
+  .check { width: 100%; max-width: 320px; background: var(--accent); border-color: var(--accent); font-size: 16px; letter-spacing: .08em; }
+  .check:active { background: #d63b68; }
 
-    .symbol-circle {
-      width: 25px;
-      height: 25px;
-      border: 3px solid var(--pink);
-      border-radius: 50%;
-    }
-
-    .symbol-triangle {
-      width: 0;
-      height: 0;
-      border-left: 15px solid transparent;
-      border-right: 15px solid transparent;
-      border-bottom: 27px solid var(--pink);
-    }
-
-    .symbol-square {
-      width: 25px;
-      height: 25px;
-      border: 3px solid var(--pink);
-    }
-
-    h1 {
-      margin: 0 0 18px;
-      font-size: clamp(27px, 7vw, 36px);
-      letter-spacing: 3px;
-      line-height: 1.2;
-    }
-
-    .intro {
-      margin: 0 auto;
-      max-width: 360px;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.65;
-      white-space: pre-line;
-    }
-
-    .separator {
-      width: 100%;
-      height: 1px;
-      margin: 30px 0;
-      background: linear-gradient(90deg, transparent, #555555, transparent);
-    }
-
-    h2 {
-      margin: 0 0 20px;
-      font-size: 19px;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-
-    .code-display {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 22px;
-    }
-
-    .code-digit {
-      width: 55px;
-      height: 62px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border: 1px solid #555555;
-      border-radius: 8px;
-      background: var(--panel);
-      color: var(--text);
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    .code-digit.filled {
-      border-color: var(--pink);
-    }
-
-    .keypad {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      max-width: 265px;
-      margin: 0 auto;
-    }
-
-    .key {
-      min-height: 57px;
-      border: 1px solid #3b3b3b;
-      border-radius: 9px;
-      background: var(--button);
-      color: var(--text);
-      font-size: 22px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.15s;
-    }
-
-    .key:hover {
-      background: var(--button-hover);
-    }
-
-    .key:active {
-      transform: scale(0.96);
-    }
-
-    .key.zero {
-      grid-column: 2;
-    }
-
-    .key.action {
-      color: var(--muted);
-      font-size: 15px;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-    }
-
-    .check-button {
-      width: 100%;
-      max-width: 265px;
-      margin-top: 18px;
-      padding: 15px 20px;
-      border: none;
-      border-radius: 8px;
-      background: var(--pink);
-      color: white;
-      font-size: 14px;
-      font-weight: bold;
-      letter-spacing: 1.5px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .check-button:hover {
-      background: var(--pink-hover);
-    }
-
-    .message {
-      display: none;
-      margin: 22px auto 0;
-      padding: 20px;
-      border: 1px solid #444444;
-      border-left: 3px solid var(--pink);
-      border-radius: 8px;
-      background: var(--panel);
-      text-align: left;
-      line-height: 1.65;
-      white-space: pre-line;
-    }
-
-    .message.visible {
-      display: block;
-    }
-
-    .message-title {
-      margin: 0 0 9px;
-      color: var(--pink);
-      font-size: 13px;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
-
-    .message-text {
-      margin: 0;
-      color: var(--text);
-      font-size: 15px;
-    }
-
-    .error {
-      min-height: 20px;
-      margin: 13px 0 0;
-      color: #ff829f;
-      font-size: 13px;
-    }
-
-    @media (max-width: 360px) {
-      .code-digit {
-        width: 49px;
-        height: 57px;
-      }
-
-      .keypad {
-        max-width: 245px;
-      }
-    }
-  </style>
+  #message { min-height: 24px; margin: 16px 0 0; color: var(--accent); font-weight: 700; font-size: 14px; letter-spacing: .05em; }
+  #hintBox { display: none; margin-top: 12px; background: var(--card); border: 1px solid var(--accent); border-radius: 10px; padding: 18px; text-align: left; }
+  #hintBox.show { display: block; }
+  #hintBox h3 { margin: 0 0 10px; color: var(--accent); font-size: 14px; letter-spacing: .12em; text-align: center; }
+  #hintText { margin: 0; font-size: 17px; line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+</style>
 </head>
-
 <body>
-  <main class="container">
+<main class="terminal">
 
-    <!-- =========================================
-         ЛОГОТИП: КОЛО, ТРИКУТНИК І КВАДРАТ
-         ========================================= -->
-    <div class="symbols" aria-label="Коло, трикутник, квадрат">
-      <div class="symbol-circle"></div>
-      <div class="symbol-triangle"></div>
-      <div class="symbol-square"></div>
+  <div class="symbols" aria-hidden="true">
+    <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16"/></svg>
+    <svg viewBox="0 0 40 40"><polygon points="20,5 36,34 4,34" stroke-linejoin="round"/></svg>
+    <svg viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30"/></svg>
+  </div>
+
+  <!-- ============================================================
+       ЗМІНИ ТЕКСТ ПРИВІТАННЯ ТУТ
+       Можна змінювати заголовок, основний текст і кількість абзаців
+       (кожен абзац — окремий рядок <p>...</p>).
+       ============================================================ -->
+  <h1>ГРА ПОЧИНАЄТЬСЯ</h1>
+  <div class="welcome">
+    <p>Вітаю у грі! :)</p>
+    <p>Сьогодні на тебе чекає невелика та цікава пригода. 
+Щоб відкрити наступні підказки, потрібно знайти правильні чотиризначні коди.</p>
+    <p>Дочекайся мене та перший код, а протягом дня ти отримаєш інші коди, головне - насолоджуйся грою.</p>
+  </div>
+  <!-- ===================== КІНЕЦЬ БЛОКУ ПРИВІТАННЯ ===================== -->
+
+  <hr>
+
+  <h2>ВВЕДІТЬ КОД</h2>
+
+  <div class="code-wrap">
+    <div class="cells" aria-hidden="true">
+      <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
     </div>
+    <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4"
+           autocomplete="one-time-code" autocapitalize="off" autocorrect="off" spellcheck="false"
+           aria-label="Чотиризначний код">
+  </div>
+  <p class="hint-text">Торкнися поля або використай кнопки нижче</p>
 
-    <!-- =========================================
-         ТУТ МОЖНА ЗМІНИТИ ЗАГОЛОВОК І ПРИВІТАННЯ
-         ========================================= -->
-    <h1>ГРА ПОЧИНАЄТЬСЯ</h1>
+  <div class="keypad">
+    <button type="button" data-key="1">1</button>
+    <button type="button" data-key="2">2</button>
+    <button type="button" data-key="3">3</button>
+    <button type="button" data-key="4">4</button>
+    <button type="button" data-key="5">5</button>
+    <button type="button" data-key="6">6</button>
+    <button type="button" data-key="7">7</button>
+    <button type="button" data-key="8">8</button>
+    <button type="button" data-key="9">9</button>
+    <button type="button" class="small" data-key="clr">CLR</button>
+    <button type="button" data-key="0">0</button>
+    <button type="button" data-key="back" aria-label="Видалити останню цифру">⌫</button>
+  </div>
 
-    <p class="intro">Вітаю у грі!
-<BR> Потрібно трішки зачекати щоб отримати першу підказку, я скоро буду :)
-<BR>
-Збережи цю сторінку щоб потім вводити коди і дізнаватись перебіг гри</p>
+  <button type="button" class="check" id="checkBtn">ПЕРЕВІРИТИ КОД</button>
 
-    <div class="separator"></div>
+  <p id="message" role="alert"></p>
 
-    <h2>ВВЕДІТЬ ЧОТИРИЗНАЧНИЙ КОД</h2>
+  <div id="hintBox">
+    <h3>ВАША ПІДКАЗКА</h3>
+    <p id="hintText"></p>
+  </div>
 
-    <!-- ЧОТИРИ ПОЛЯ ДЛЯ ВІДОБРАЖЕННЯ ЦИФР -->
-    <div class="code-display" aria-label="Введений код">
-      <div class="code-digit" id="digit1"></div>
-      <div class="code-digit" id="digit2"></div>
-      <div class="code-digit" id="digit3"></div>
-      <div class="code-digit" id="digit4"></div>
-    </div>
+</main>
 
-    <!-- ЦИФРОВА КЛАВІАТУРА -->
-    <div class="keypad">
-      <button class="key" type="button" data-digit="1">1</button>
-      <button class="key" type="button" data-digit="2">2</button>
-      <button class="key" type="button" data-digit="3">3</button>
-      <button class="key" type="button" data-digit="4">4</button>
-      <button class="key" type="button" data-digit="5">5</button>
-      <button class="key" type="button" data-digit="6">6</button>
-      <button class="key" type="button" data-digit="7">7</button>
-      <button class="key" type="button" data-digit="8">8</button>
-      <button class="key" type="button" data-digit="9">9</button>
+<script>
+  /* ==================================================================
+     ЗМІНИ П'ЯТЬ КОДІВ І ТЕКСТИ ПІДКАЗОК ТУТ
+     Формат: "КОД": "Текст підказки".
+     Код — рівно чотири цифри в лапках (можна з нуля, напр. "0507").
+     Інших частин файлу змінювати не потрібно.
+     ================================================================== */
+  const HINTS = {
+    "1011": "Сьогодні нас чекає сніданок не вдома, орієнтуємось на 11-00.",
+    "1609": "Тепер нас чекає фото-прогулянка і потрібно буде забрати щось смачненьке.",
+    "0903": "Потрібно мене зачекати трохи, але поки ти будеш вдома - підготуй цукор та соду.",
+    "2026": "Тепер можемо поглянути фото та пограти в ще одну гру, як будеш готова - скажи мені слово *картки*.",
+    "2002": "Ти пройшла всі етапи гри, але найкраще що ми не просто грали, а провели цей день разом. 
+Тепер на нас чекає ще одна подорож, збираємось."
+  };
+  /* ===================== КІНЕЦЬ БЛОКУ КОДІВ ===================== */
 
-      <!-- Нижній ряд: очистити | 0 | видалити останню цифру -->
-      <button class="key action" id="clearButton" type="button" aria-label="Очистити весь код">CLR</button>
-      <button class="key zero" type="button" data-digit="0">0</button>
-      <button class="key action" id="deleteButton" type="button" aria-label="Видалити останню цифру">⌫</button>
-    </div>
+  (function () {
+    var input = document.getElementById('code');
+    var cells = document.querySelectorAll('.cell');
+    var message = document.getElementById('message');
+    var hintBox = document.getElementById('hintBox');
+    var hintText = document.getElementById('hintText');
 
-    <button class="check-button" id="checkButton" type="button">
-      ПЕРЕВІРИТИ КОД
-    </button>
+    function clean(v) { return String(v).replace(/\D/g, '').slice(0, 4); }
 
-    <p class="error" id="errorMessage" aria-live="polite"></p>
-
-    <!-- ТУТ З'ЯВЛЯТИМУТЬСЯ ПІДКАЗКИ -->
-    <section class="message" id="hintBox" aria-live="polite">
-      <p class="message-title">ВАША ПІДКАЗКА</p>
-      <p class="message-text" id="hintText"></p>
-    </section>
-
-  </main>
-
-  <script>
-    // =====================================================
-    // ТУТ МОЖНА ЗМІНИТИ П'ЯТЬ КОДІВ ТА ТЕКСТИ ПІДКАЗОК
-    //
-    // Заміни цифри та текст після двокрапки на свої.
-    // Кожен код має складатися рівно з чотирьох цифр.
-    // Можна використовувати цифру 0.
-    // =====================================================
-
-    const hints = {
-      "1011": "Сьогодні нас чекає сніданок не вдома, орієнтуємось на 11-00.",
-      "1609": "Тепер нас чекає фото-прогулянка і потрібно буде забрати щось смачненьке.",
-	"0903": "Потрібно мене зачекати трохи, але поки ти будеш вдома - підготуй цукор та соду.",
-      "2026": "Тепер можемо поглянути фото та пограти в ще одну гру, як будеш готова - скажи мені слово *картки*",
-            "2002": "Ти пройшла всі етапи гри, але найкраще що ми не просто грали, а провели цей день разом. 
-Тепер на нас чекає ще одна подорож, збираємось. "
-    };
-
-    // =====================================================
-    // НИЖЧЕ РОЗТАШОВАНИЙ ТЕХНІЧНИЙ КОД.
-    // Його змінювати не потрібно.
-    // =====================================================
-
-    let enteredCode = "";
-
-    const digitBoxes = [
-      document.getElementById("digit1"),
-      document.getElementById("digit2"),
-      document.getElementById("digit3"),
-      document.getElementById("digit4")
-    ];
-
-    const hintBox = document.getElementById("hintBox");
-    const hintText = document.getElementById("hintText");
-    const errorMessage = document.getElementById("errorMessage");
-
-    function updateDisplay() {
-      digitBoxes.forEach((box, index) => {
-        box.textContent = enteredCode[index] || "";
-        box.classList.toggle("filled", Boolean(enteredCode[index]));
-      });
-    }
-
-    function addDigit(digit) {
-      if (enteredCode.length >= 4) return;
-
-      enteredCode += digit;
-      updateDisplay();
-
-      errorMessage.textContent = "";
-      hintBox.classList.remove("visible");
-    }
-
-    function deleteLastDigit() {
-      enteredCode = enteredCode.slice(0, -1);
-      updateDisplay();
-      errorMessage.textContent = "";
-      hintBox.classList.remove("visible");
-    }
-
-    function clearCode() {
-      enteredCode = "";
-      updateDisplay();
-      errorMessage.textContent = "";
-      hintBox.classList.remove("visible");
-    }
-
-    function checkCode() {
-      if (enteredCode.length !== 4) {
-        errorMessage.textContent = "Спочатку введіть усі чотири цифри.";
-        hintBox.classList.remove("visible");
-        return;
-      }
-
-      if (Object.prototype.hasOwnProperty.call(hints, enteredCode)) {
-        hintText.textContent = hints[enteredCode];
-        hintBox.classList.add("visible");
-        errorMessage.textContent = "";
-      } else {
-        hintBox.classList.remove("visible");
-        errorMessage.textContent = "НЕПРАВИЛЬНИЙ КОД. СПРОБУЙТЕ ЩЕ РАЗ.";
+    function render() {
+      var v = input.value;
+      var focused = document.activeElement === input;
+      for (var i = 0; i < 4; i++) {
+        cells[i].textContent = v[i] || '';
+        var isActive = focused && i === Math.min(v.length, 3);
+        cells[i].classList.toggle('active', isActive);
       }
     }
 
-    document.querySelectorAll("[data-digit]").forEach(button => {
-      button.addEventListener("click", () => {
-        addDigit(button.dataset.digit);
+    function resetFeedback() {
+      message.textContent = '';
+      hintBox.classList.remove('show');
+    }
+
+    function setValue(v) {
+      input.value = clean(v);
+      render();
+    }
+
+    input.addEventListener('input', function () {
+      var cleaned = clean(input.value);
+      if (input.value !== cleaned) input.value = cleaned;
+      resetFeedback();
+      render();
+    });
+    input.addEventListener('focus', render);
+    input.addEventListener('blur', render);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); check(); }
+    });
+
+    document.querySelectorAll('.keypad button').forEach(function (btn) {
+      /* не забираємо фокус у поля, щоб не з'являлась/зникала системна клавіатура */
+      btn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      btn.addEventListener('click', function () {
+        var k = btn.getAttribute('data-key');
+        resetFeedback();
+        if (k === 'clr') setValue('');
+        else if (k === 'back') setValue(input.value.slice(0, -1));
+        else if (input.value.length < 4) setValue(input.value + k);
       });
     });
 
-    document.getElementById("clearButton").addEventListener("click", clearCode);
-    document.getElementById("deleteButton").addEventListener("click", deleteLastDigit);
-    document.getElementById("checkButton").addEventListener("click", checkCode);
-  </script>
+    function check() {
+      var v = input.value;
+      hintBox.classList.remove('show');
+      if (v.length < 4) {
+        message.textContent = 'НЕПОВНИЙ КОД. ВВЕДІТЬ ЧОТИРИ ЦИФРИ';
+        return;
+      }
+      if (Object.prototype.hasOwnProperty.call(HINTS, v)) {
+        message.textContent = '';
+        hintText.textContent = HINTS[v];
+        hintBox.classList.add('show');
+      } else {
+        message.textContent = 'НЕПРАВИЛЬНИЙ КОД. СПРОБУЙТЕ ЩЕ РАЗ';
+      }
+    }
+
+    document.getElementById('checkBtn').addEventListener('click', check);
+    render();
+  })();
+</script>
 </body>
 </html>
